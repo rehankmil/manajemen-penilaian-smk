@@ -18,7 +18,22 @@ class DashboardController extends Controller
         $kelas = Kelas::all();
         $guru = Guru::all();
         $murid = Murid::all();
-        return view('admin.dashboard', compact('mapel', 'kelas', 'guru', 'murid'), [
+
+        // Mengambil data kelas dengan jumlah murid per kelas
+        $kelasData = Kelas::withCount('murid')
+                    ->get()
+                    ->map(function ($kelas) {
+                        return [
+                            'kode' => $kelas->kode,
+                            'jumlah_murid' => $kelas->murid_count
+                        ];
+                    });
+        
+        // Menyiapkan labels dan data untuk chart
+        $labels = $kelasData->pluck('kode')->toArray();
+        $data = $kelasData->pluck('jumlah_murid')->toArray();
+
+        return view('admin.dashboard', compact('mapel', 'kelas', 'guru', 'murid', 'labels', 'data'), [
             'title' => 'Dashboard',
             'user' => $user
         ]);

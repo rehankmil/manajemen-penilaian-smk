@@ -5,18 +5,29 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use App\Models\Kelas;
 use App\Models\Murid;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\MuridRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 
 class MuridController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $murid = Murid::with('kelas')->latest()->paginate(10);
-        return view('admin.murid.murid', ['title' => 'Daftar Murid', 'murid' => $murid]);
+        $search = $request->query('search');
+        
+        $query = Murid::with('kelas')->search($search);
+        
+        $murid = $query->latest()->paginate(10);
+        
+        $murid->appends(['search' => $search]);
+        
+        return view('admin.murid.murid', [
+            'title' => 'Daftar Murid', 
+            'murid' => $murid,
+            'search' => $search
+        ]);
     }
 
     public function create()
@@ -36,14 +47,12 @@ class MuridController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Buat user baru
             $user = User::create([
                 'username' => $request->nis,
-                'password' => Hash::make($request->nis), // Default password sama dengan NIS
+                'password' => Hash::make($request->password),
                 'role' => 'murid'
             ]);
 
-            // Buat murid baru dengan user_id dari user yang baru dibuat
             Murid::create([
                 'nis' => $request->nis,
                 'nama' => $request->nama,
@@ -87,7 +96,6 @@ class MuridController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Update data murid
             $murid->update([
                 'nis' => $request->nis,
                 'nama' => $request->nama,
@@ -98,7 +106,6 @@ class MuridController extends Controller
                 'kelas_id' => $request->kelas_id,
             ]);
 
-            // Update username pada user jika NIS berubah
             if ($murid->nis != $request->nis) {
                 $murid->user->update([
                     'username' => $request->nis
@@ -117,13 +124,10 @@ class MuridController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Simpan reference ke user terlebih dahulu
             $user = $murid->user;
             
-            // Hapus data murid terlebih dahulu
             $murid->delete();
             
-            // Setelah murid dihapus, baru hapus user terkait
             if ($user) {
                 $user->delete();
             }

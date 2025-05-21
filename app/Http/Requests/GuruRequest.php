@@ -23,6 +23,7 @@ class GuruRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
+            'password' => 'required|string|min:8|confirmed',
             'nama' => 'required|string|max:255',
             'email' => [
                 'required',
@@ -61,6 +62,9 @@ class GuruRequest extends FormRequest
         return [
             'nip.required' => 'NIP wajib diisi',
             'nip.unique' => 'NIP sudah digunakan',
+            'password.required' => 'Kata Sandi wajib diisi',
+            'password.min' => 'Kata Sandi minimal 8 karakter',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak sesuai',
             'nama.required' => 'Nama wajib diisi',
             'email.required' => 'Email wajib diisi',
             'email.email' => 'Format email tidak valid',

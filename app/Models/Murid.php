@@ -13,7 +13,7 @@ class Murid extends Model
 
     protected $table = 'murid';
     protected $primaryKey = 'id';
-    protected $fillable = ['nama', 'nis', 'nama', 'no_telp', 'jenis_kelamin', 'tgl_lahir', 'avatar','kelas_id', 'user_id'];
+    protected $fillable = ['nis', 'nama', 'no_telp', 'jenis_kelamin', 'tgl_lahir', 'avatar','kelas_id', 'user_id'];
 
     public function user(): BelongsTo
     {
@@ -28,5 +28,29 @@ class Murid extends Model
     public function nilai(): HasMany
     {
         return $this->HasMany(Nilai::class, 'murid_id');
+    }
+
+     /**
+     * Scope a query to search murid based on criteria.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $search
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeSearch($query, $search)
+    {
+        if ($search) {
+            return $query->where(function($q) use ($search) {
+                $q->where('nama', 'LIKE', "%{$search}%")
+                  ->orWhere('nis', 'LIKE', "%{$search}%")
+                  ->orWhere('no_telp', 'LIKE', "%{$search}%")
+                  ->orWhereHas('kelas', function($q) use ($search) {
+                      $q->where('kode', 'LIKE', "%{$search}%")
+                        ->orWhere('nama', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+        
+        return $query;
     }
 }

@@ -5,18 +5,45 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Guru;
 use App\Models\User;
 use App\Models\Mapel;
+use Illuminate\Http\Request;
 use App\Http\Requests\GuruRequest;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Controllers\Controller;
 
 class GuruController extends Controller
 {
-    public function index()
+
+    public function index(Request $request)
     {
-        $gurus = Guru::with('mapel')->latest()->paginate(10);
-        return view('admin.guru.guru', ['title' => 'Daftar Guru', 'gurus' => $gurus]);
+        $sort = $request->get('sort', 'latest');
+        
+        $query = Guru::with('mapel');
+        
+        switch ($sort) {
+            case 'asc':
+                $query->orderBy('nama', 'asc');
+                break;
+            case 'desc':
+                $query->orderBy('nama', 'desc');
+                break;
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'latest':
+            default:
+                $query->latest();
+                break;
+        }
+        
+        $gurus = $query->paginate(10)->withQueryString();
+        
+        return view('admin.guru.guru', [
+            'title' => 'Daftar Guru', 
+            'gurus' => $gurus,
+            'sort' => $sort
+        ]);
     }
     
     public function create()
@@ -36,14 +63,12 @@ class GuruController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Buat user baru
             $user = User::create([
                 'username' => $request->nip,
-                'password' => Hash::make($request->nip), // Default password sama dengan NIP
+                'password' => Hash::make($request->password),
                 'role' => 'guru'
             ]);
 
-            // Buat guru baru dengan user_id dari user yang baru dibuat
             Guru::create([
                 'nip' => $request->nip,
                 'nama' => $request->nama,
@@ -89,7 +114,6 @@ class GuruController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Update data guru
             $guru->update([
                 'nip' => $request->nip,
                 'nama' => $request->nama,
@@ -101,7 +125,6 @@ class GuruController extends Controller
                 'mapel_id' => $request->mapel_id,
             ]);
 
-            // Update username pada user jika NIP berubah
             if ($guru->nip != $request->nip) {
                 $guru->user->update([
                     'username' => $request->nip
@@ -116,20 +139,14 @@ class GuruController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
- public function destroy(Guru $guru)
+    public function destroy(Guru $guru)
     {
         DB::beginTransaction();
         try {
-            // Simpan reference ke user terlebih dahulu
             $user = $guru->user;
             
-            // Hapus data guru terlebih dahulu
             $guru->delete();
             
-            // Setelah guru dihapus, baru hapus user terkait
             if ($user) {
                 $user->delete();
             }

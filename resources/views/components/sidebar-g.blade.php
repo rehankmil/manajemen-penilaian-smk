@@ -24,7 +24,7 @@
     </div>
 
     <!-- Nav Item - Utilities Collapse Menu -->
-    <x-sidebar-link href="{{ route('muridguru') }}" routeName="murid" icon="fa-user-friends" label="Penilaian" /> --}}
+    <x-sidebar-link href="{{ route('guru.penilaian') }}" routeName="murid" icon="fas fa-file-alt" label="Penilaian" />
 
     <!-- Divider -->
     <hr class="sidebar-divider">

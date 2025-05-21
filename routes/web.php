@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 /*
     Authentication
 */
-Route::get('/', [AuthController::class, 'index'])->name('login')->middleware('guest');
+Route::get('/', [AuthController::class, 'index'])->name('login')->middleware('guest:admin,guru,murid');
 Route::post('/login', [AuthController::class, 'verify'])->name('auth.verify');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -34,7 +34,16 @@ Route::group(['middleware'=>'auth:guru'], function()
 {
     Route::get('/dashboard-g', [App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('guru.dashboard');
     Route::get('/profil-g', [App\Http\Controllers\Guru\ProfilController::class, 'index'])->name('guru.profil');
-    Route::get('/murid-g', [App\Http\Controllers\Admin\GuruController::class, 'murid'])->name('muridguru');
+    Route::get('/profil-g/ubah', [App\Http\Controllers\Guru\ProfilController::class, 'edit'])->name('guru.profil.ubah');
+    Route::match(array('PUT', 'PATCH'), '/profil-g/update', [App\Http\Controllers\Guru\ProfilController::class, 'update'])->name('guru.profil.update');
+    Route::get('/penilaian', [App\Http\Controllers\Guru\PenilaianController::class, 'index'])->name('guru.penilaian');
+    Route::get('/penilaian/kelas/{kelasId}/murid', [App\Http\Controllers\Guru\PenilaianController::class, 'daftarMurid'])->name('guru.penilaian.daftar-murid');
+    Route::get('/murid/{muridId}/form-nilai', [App\Http\Controllers\Guru\PenilaianController::class, 'formNilai'])->name('guru.penilaian.form-nilai');
+    Route::post('/nilai/store', [App\Http\Controllers\Guru\PenilaianController::class, 'store'])->name('guru.penilaian.store-nilai');
+    Route::get('/murid/{muridId}/nilai', [App\Http\Controllers\Guru\PenilaianController::class, 'daftarNilai'])->name('guru.penilaian.daftar-nilai');
+    Route::get('/nilai/{nilaiId}/edit', [App\Http\Controllers\Guru\PenilaianController::class, 'edit'])->name('guru.penilaian.edit-nilai');
+    Route::put('/nilai/{nilaiId}/update', [App\Http\Controllers\Guru\PenilaianController::class, 'update'])->name('guru.penilaian.update-nilai');
+    Route::delete('/nilai/{nilaiId}/destroy', [App\Http\Controllers\Guru\PenilaianController::class, 'destroy'])->name('guru.penilaian.destroy-nilai');
 });
 
 /*
@@ -46,6 +55,6 @@ Route::group(['middleware'=>'auth:murid'], function()
     Route::get('/profil-m', [App\Http\Controllers\Murid\ProfilController::class, 'index'])->name('murid.profil');
     Route::get('/profil-m/ubah', [App\Http\Controllers\Murid\ProfilController::class, 'edit'])->name('murid.profil.ubah');
     Route::match(array('PUT', 'PATCH'), '/profil-m/update', [App\Http\Controllers\Murid\ProfilController::class, 'update'])->name('murid.profil.update');
-    Route::get('/nilai-m', [App\Http\Controllers\Murid\NilaiController::class, 'index'])->name('nilaimurid');
-    // Route::resource('profil-m', App\Http\Controllers\Murid\ProfilController::class);
+    Route::get('/nilai-m', [App\Http\Controllers\Murid\NilaiController::class, 'index'])->name('murid.nilai');
+    Route::get('/{siswa_id}/nilai/pdf', [App\Http\Controllers\Murid\NilaiController::class, 'generatePDF'])->name('murid.nilai.pdf');
 });

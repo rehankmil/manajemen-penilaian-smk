@@ -8,50 +8,42 @@ use App\Models\Mapel;
 use App\Models\Murid;
 use App\Models\Nilai;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
 
 class NilaiController extends Controller
 {
     public function index(Request $request)
     {
-        // Query dasar
         $query = Nilai::with(['mapel', 'guru', 'murid.kelas']);
 
-        // Filter berdasarkan mata pelajaran
         if ($request->has('mapel_id') && $request->mapel_id != '') {
             $query->where('mapel_id', $request->mapel_id);
         }
 
-        // Filter berdasarkan guru
         if ($request->has('guru_id') && $request->guru_id != '') {
             $query->where('guru_id', $request->guru_id);
         }
 
-        // Filter berdasarkan murid
         if ($request->has('murid_id') && $request->murid_id != '') {
             $query->where('murid_id', $request->murid_id);
         }
         
-        // Filter berdasarkan kelas
         if ($request->has('kelas_id') && $request->kelas_id != '') {
-            // Kita perlu melakukan join dengan tabel murid untuk memfilter berdasarkan kelas
             $query->whereHas('murid', function ($q) use ($request) {
                 $q->where('kelas_id', $request->kelas_id);
             });
         }
 
-        // Filter berdasarkan semester
         if ($request->has('semester') && $request->semester != '') {
             $query->where('semester', $request->semester);
         }
 
-        // Filter berdasarkan predikat
         if ($request->has('predikat') && $request->predikat != '') {
             $query->where('predikat', $request->predikat);
         }
 
-        // Filter berdasarkan range nilai
         if ($request->has('nilai_min') && $request->nilai_min != '') {
             $query->where('nilai', '>=', $request->nilai_min);
         }
@@ -60,19 +52,15 @@ class NilaiController extends Controller
             $query->where('nilai', '<=', $request->nilai_max);
         }
 
-        // Dapatkan data nilai dengan pagination
         $nilaiList = $query->latest()->paginate(10);
 
-        // Ambil data untuk dropdown filter
         $mapelList = Mapel::all();
         $guruList = Guru::all();
         $muridList = Murid::all();
         $kelasList = Kelas::all();
         
-        // Daftar semester yang tersedia
         $semesterList = ['1', '2'];
         
-        // Daftar predikat yang tersedia (contoh)
         $predikatList = ['A', 'B', 'C', 'D', 'E'];
 
         return view('admin.nilai.nilai', compact(
@@ -89,13 +77,11 @@ class NilaiController extends Controller
 
     public function create()
     {
-        // Ambil data untuk dropdown
         $mapelList = Mapel::all();
         $kelasList = Kelas::all();
         $guruList = Guru::with('mapel')->get();
         $muridList = Murid::with('kelas')->get();
         
-        // Daftar semester yang tersedia
         $semesterList = ['1', '2'];
         
         return view('admin.nilai.tambah', compact(
@@ -109,37 +95,54 @@ class NilaiController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request);
-        // Validasi data input
-        $validator = Validator::make($request->all(), [
-            'nilai' => 'required|integer|min:0|max:100',
-            'semester' => 'required|string',
-            'mapel_id' => 'required|exists:mapels,id',
-            'guru_id' => 'required|exists:gurus,id',
-            'murid_id' => 'required|exists:murid,id'
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
+        try {
+            $validator = Validator::make($request->all(), [
+                'nilai' => 'required|integer|min:0|max:100',
+                'semester' => 'required|string',
+                'mapel_id' => 'required|exists:mapels,id',
+                'guru_id' => 'required|exists:gurus,id',
+                'murid_id' => 'required|exists:murid,id'
+            ],
+            [
+                'nilai.required' => 'Nilai harus diisi',
+                'nilai.integer' => 'Nilai harus berupa angka',
+                'nilai.min' => 'Nilai minimal adalah 0',
+                'nilai.max' => 'Nilai maksimal adalah 100',
+                'semester.required' => 'Semester harus diisi',
+                'semester.string' => 'Semester harus berupa teks',
+                'mapel_id.required' => 'Mata Pelajaran harus diisi',
+                'mapel_id.exists' => 'Mata Pelajaran sudah ada',
+                'guru_id.required' => 'Guru harus diisi',
+                'guru_id.exists' => 'Guru sudah ada',
+                'murid_id.required' => 'Murid harus diisi',
+                'murid_id.exists' => 'Murid sudah ada'
+            ]);
+            
+            if ($validator->fails()) {
+                return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
+            }
+            
+            DB::beginTransaction();
+            $predikat = $this->hitungPredikat($request->nilai);
+            
+            Nilai::create([
+                'nilai' => $request->nilai,
+                'predikat' => $predikat,
+                'semester' => $request->semester,
+                'mapel_id' => $request->mapel_id,
+                'guru_id' => $request->guru_id,
+                'murid_id' => $request->murid_id
+            ]);
+            
+            DB::commit();
+            return redirect()->route('nilai.index')
+                ->with('success', 'Data nilai berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
-
-        // Tentukan predikat berdasarkan nilai
-        $predikat = $this->hitungPredikat($request->nilai);
-        
-        // Simpan data
-        Nilai::create([
-            'nilai' => $request->nilai,
-            'predikat' => $predikat,
-            'semester' => $request->semester,
-            'mapel_id' => $request->mapel_id,
-            'guru_id' => $request->guru_id,
-            'murid_id' => $request->murid_id
-        ]);
-        
-        return redirect()->route('nilai.index')
-            ->with('success', 'Data nilai berhasil ditambahkan.');
     }
 
     public function show($id)
@@ -152,14 +155,12 @@ class NilaiController extends Controller
     public function edit($id)
     {
         $nilai = Nilai::findOrFail($id);
-        
-        // Ambil data untuk dropdown
+
         $mapelList = Mapel::all();
         $kelasList = Kelas::all();
         $guruList = Guru::with('mapel')->get();
         $muridList = Murid::with('kelas')->get();
-        
-        // Daftar semester yang tersedia
+   
         $semesterList = ['1', '2'];
         
         return view('admin.nilai.ubah', compact(
@@ -174,39 +175,57 @@ class NilaiController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Validasi data input
-        $validator = Validator::make($request->all(), [
-            'nilai' => 'required|integer|min:0|max:100',
-            'semester' => 'required|string',
-            'mapel_id' => 'required|exists:mapels,id',
-            'guru_id' => 'required|exists:gurus,id',
-            'murid_id' => 'required|exists:murid,id'
-        ]);
+        try {
 
-        if ($validator->fails()) {
-            return redirect()->back()
+            $validator = Validator::make($request->all(), [
+                'nilai' => 'required|integer|min:0|max:100',
+                'semester' => 'required|string',
+                'mapel_id' => 'required|exists:mapels,id',
+                'guru_id' => 'required|exists:gurus,id',
+                'murid_id' => 'required|exists:murid,id'
+            ],
+            [
+                'nilai.required' => 'Nilai harus diisi',
+                'nilai.integer' => 'Nilai harus berupa angka',
+                'nilai.min' => 'Nilai minimal adalah 0',
+                'nilai.max' => 'Nilai maksimal adalah 100',
+                'semester.required' => 'Semester harus diisi',
+                'semester.string' => 'Semester harus berupa teks',
+                'mapel_id.required' => 'Mata Pelajaran harus diisi',
+                'mapel_id.exists' => 'Mata Pelajaran sudah ada',
+                'guru_id.required' => 'Guru harus diisi',
+                'guru_id.exists' => 'Guru sudah ada',
+                'murid_id.required' => 'Murid harus diisi',
+                'murid_id.exists' => 'Murid sudah ada'
+            ]);
+            
+            if ($validator->fails()) {
+                return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
+            }
+            
+            $nilai = Nilai::findOrFail($id);
+            
+            $predikat = $this->hitungPredikat($request->nilai);
+            
+            DB::beginTransaction();
+            $nilai->update([
+                'nilai' => $request->nilai,
+                'predikat' => $predikat,
+                'semester' => $request->semester,
+                'mapel_id' => $request->mapel_id,
+                'guru_id' => $request->guru_id,
+                'murid_id' => $request->murid_id
+            ]);
+            DB::commit();
+            return redirect()->route('nilai.index')
+                ->with('success', 'Data nilai berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
-        
-        // Cari nilai yang akan diupdate
-        $nilai = Nilai::findOrFail($id);
-        
-        // Tentukan predikat berdasarkan nilai
-        $predikat = $this->hitungPredikat($request->nilai);
-        
-        // Update data
-        $nilai->update([
-            'nilai' => $request->nilai,
-            'predikat' => $predikat,
-            'semester' => $request->semester,
-            'mapel_id' => $request->mapel_id,
-            'guru_id' => $request->guru_id,
-            'murid_id' => $request->murid_id
-        ]);
-        
-        return redirect()->route('nilai.index')
-            ->with('success', 'Data nilai berhasil diperbarui.');
+            
     }
 
     public function destroy($id)
@@ -244,8 +263,7 @@ class NilaiController extends Controller
                 'data' => []
             ]);
         }
-        
-        // Ambil guru yang mengajar mapel yang dipilih
+  
         $guruList = Guru::where('mapel_id', $mapel_id)->get();
         
         return response()->json([
@@ -266,8 +284,7 @@ class NilaiController extends Controller
                 'data' => []
             ]);
         }
-        
-        // Ambil guru yang mengajar mapel yang dipilih
+      
         $muridList = Murid::where('kelas_id', $kelas_id)->get();
         
         return response()->json([

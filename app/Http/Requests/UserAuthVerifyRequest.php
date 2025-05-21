@@ -26,4 +26,13 @@ class UserAuthVerifyRequest extends FormRequest
             'password' => 'required',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'username.required' => 'NIP/NIS wajib diisi',
+            'password.required' => 'Kata sandi wajib diisi',
+            'password.min' => 'Kata sandi minimal berjumlah 8 karakter',
+        ];
+    }
 }

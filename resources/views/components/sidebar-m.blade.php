@@ -24,7 +24,7 @@
     </div>
 
     <!-- Nav Item - Pages Collapse Menu -->
-    <x-sidebar-link href="{{ route('nilaimurid') }}" routeName="nilaimurid" icon="fas fa-award" label="Nilai" />
+    <x-sidebar-link href="{{ route('murid.nilai') }}" routeName="murid.nilai" icon="fas fa-award" label="Nilai" />
 
     <!-- Divider -->
     <hr class="sidebar-divider">

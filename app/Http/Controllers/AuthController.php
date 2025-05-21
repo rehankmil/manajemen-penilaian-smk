@@ -9,32 +9,32 @@ class AuthController extends Controller
 {
     public function index()
     {
-        return view('auth.login');
+        return view('auth.login', ['title' => 'Masuk Akun']);
     }
 
     public function verify(UserAuthVerifyRequest $request)
     {
         $data = $request->validated();
-        
-        if(Auth::guard('admin')->attempt(['username' => $data['username'], 'password' => $data['password'], 'role' => 'admin']))
+        $remember = $request->has('remember');
+
+        if(Auth::guard('admin')->attempt(['username' => $data['username'], 'password' => $data['password'], 'role' => 'admin'], $remember))
         {
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }
-        else if(Auth::guard('guru')->attempt(['username' => $data['username'], 'password' => $data['password'], 'role' => 'guru']))
+        else if(Auth::guard('guru')->attempt(['username' => $data['username'], 'password' => $data['password'], 'role' => 'guru'], $remember))
         {
             $request->session()->regenerate();
             return redirect()->intended('/dashboard-g');
         }
-        else if(Auth::guard('murid')->attempt(['username' => $data['username'], 'password' => $data['password'], 'role' => 'murid']))
+        else if(Auth::guard('murid')->attempt(['username' => $data['username'], 'password' => $data['password'], 'role' => 'murid'], $remember))
         {
             $request->session()->regenerate();
             return redirect()->intended('/dashboard-m');
         }
         else
         {
-            abort(403, 'Unauthorized');
-            return redirect(route('login'))->with('msg', 'Data yang dimasukkan tidak valid!');
+            return redirect(route('login'))->with('msg', 'NIP/NIS atau Kata Sandi yang dimasukkan tidak valid!');
         }
     }
 

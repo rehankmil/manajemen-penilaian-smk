@@ -23,6 +23,7 @@ class MuridRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
+            'password' => 'required|string|min:8|confirmed',
             'nama' => 'required|string|max:255',
             'no_telp' => 'required|string|max:15',
             'jenis_kelamin' => 'required|string|in:L,P',
@@ -56,6 +57,9 @@ class MuridRequest extends FormRequest
         return [
             'nis.required' => 'NIS wajib diisi',
             'nis.unique' => 'NIS sudah digunakan',
+            'password.required' => 'Kata sandi wajib diisi',
+            'password.min' => 'Kata sandi minimal berjumlah 8 karakter',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak sesuai',
             'nama.required' => 'Nama wajib diisi',
             'no_telp.required' => 'Nomor telepon wajib diisi',
             'jenis_kelamin.required' => 'Jenis kelamin wajib diisi',

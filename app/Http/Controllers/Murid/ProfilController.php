@@ -3,11 +3,8 @@
 namespace App\Http\Controllers\Murid;
 use App\Models\Kelas;
 
-use App\Models\Murid;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\MuridRequest;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +13,7 @@ class ProfilController extends Controller
     public function index()
     {
         $profil = Auth::guard('murid')->user();
-        return view('murid.profil', [
+        return view('murid.profil.profil', [
             'title' => 'Profil Murid',
             'murid' => $profil->murid
         ]);
@@ -33,7 +30,7 @@ class ProfilController extends Controller
             'img/avt/avt3.png',
             'img/avt/avt4.png',
         ];
-        return view('murid.ubahprofil', compact('kelas', 'avatars'), ['title' => 'Ubah Data Murid', 'murid' => $murid->murid]);
+        return view('murid.profil.ubahprofil', compact('kelas', 'avatars'), ['title' => 'Ubah Data Murid', 'murid' => $murid->murid]);
     }
 
     public function update(Request $request)

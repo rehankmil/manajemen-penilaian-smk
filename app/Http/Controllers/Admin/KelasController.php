@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Kelas;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
 
 class KelasController extends Controller
 {
@@ -24,27 +25,40 @@ class KelasController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'kode' => 'required|string|max:10|unique:kelas,kode',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('kelas.create')
+        try {
+            $validator = Validator::make($request->all(), [
+                'kode' => 'required|string|max:10|unique:kelas,kode',
+            ], [
+                'kode.required' => 'Kode kelas harus diisi',
+                'kode.string' => 'Kode kelas harus berupa teks',
+                'kode.max' => 'Kode kelas maksimal 10 karakter',
+                'kode.unique' => 'Kode kelas sudah digunakan',
+            ]);
+            
+            if ($validator->fails()) {
+                return redirect()->route('kelas.create')
                 ->withErrors($validator)
                 ->withInput();
+            }
+            
+            DB::beginTransaction();
+            Kelas::create([
+                'kode' => $request->kode,
+            ]);
+
+            DB::commit();
+            return redirect()->route('kelas.index')
+                ->with('success', 'Kelas berhasil ditambahkan');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('kelas.create')
+                ->withErrors(['kode' => 'Terjadi kesalahan: ' . $e->getMessage()])
+                ->withInput();
         }
-
-        Kelas::create([
-            'kode' => $request->kode,
-        ]);
-
-        return redirect()->route('kelas.index')
-            ->with('success', 'Kelas berhasil ditambahkan');
     }
 
     public function edit(Kelas $kelas)
     {
-        // dd($kelas);
         return view('admin.kelas.ubah', [
             'title' => 'Ubah Data Kelas',
             'kelas' => $kelas
@@ -53,33 +67,54 @@ class KelasController extends Controller
 
     public function update(Request $request, Kelas $kelas)
     {
-        $validator = Validator::make($request->all(), [
-            'kode' => 'required|string|max:10|unique:kelas,kode,' . $kelas->id,
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('kelas.edit', $kelas->id)
+        try {
+            $validator = Validator::make($request->all(), [
+                'kode' => 'required|string|max:10|unique:kelas,kode,' . $kelas->id,
+            ],
+            [
+                'kode.required' => 'Kode kelas harus diisi',
+                'kode.string' => 'Kode kelas harus berupa teks',
+                'kode.max' => 'Kode kelas maksimal 10 karakter',
+                'kode.unique' => 'Kode kelas sudah digunakan',
+            ]);
+            
+            if ($validator->fails()) {
+                return redirect()->route('kelas.edit', $kelas->id)
                 ->withErrors($validator)
                 ->withInput();
+            }
+            
+            DB::beginTransaction();
+            $kelas->update([
+                'kode' => $request->kode,
+            ]);
+
+            DB::commit();
+            return redirect()->route('kelas.index')
+                ->with('success', 'Data Kelas berhasil diperbarui');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
-
-        $kelas->update([
-            'kode' => $request->kode,
-        ]);
-
-        return redirect()->route('kelas.index')
-            ->with('success', 'Data Kelas berhasil diperbarui');
     }
 
     public function destroy(Kelas $kelas)
     {
-        if ($kelas->murid->count() > 0) {
-            return redirect()->route('kelas.index')
-                ->with('error', 'Data Kelas tidak dapat dihapus karena masih memiliki murid');
-        }
+        DB::beginTransaction();
+        try {
+            if ($kelas->murid()->count() > 0) {
+                return redirect()->route('kelas.index')
+                    ->with('error', 'Data Kelas tidak dapat dihapus karena masih memiliki murid');
+            }
 
-        $kelas->delete();
-        return redirect()->route('kelas.index')
-            ->with('success', 'Data Kelas berhasil dihapus');
+            $kelas->delete();
+
+            DB::commit();
+            return redirect()->route('kelas.index')
+                ->with('success', 'Data Kelas berhasil dihapus');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
+        }
     }
 }

@@ -44,16 +44,19 @@ return [
         'admin' => [
             'driver' => 'session',
             'provider' => 'admin',
+            'remember' => true,
         ],
         
         'guru' => [
             'driver' => 'session',
             'provider' => 'guru',
+            'remember' => true,
         ],
         
         'murid' => [
             'driver' => 'session',
             'provider' => 'murid',
+            'remember' => true,
         ],
     ],
 

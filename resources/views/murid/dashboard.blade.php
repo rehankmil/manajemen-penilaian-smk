@@ -13,17 +13,15 @@
                     <h1 class="h3 mb-0 text-gray-800">{{ $title }}</h1>
                 </div>
                 <div class="container">
-                    <div class="row">
-                        <div class="col-xl-5 col-md-6 mb-4">
-                            <div class="card">
-                                <div class="card-header">Jumlah Perolehan Nilai</div>
-                                <div class="card-body">
-                                    <canvas id="predikatChart" 
-                                    data-predicates="{{ json_encode($predicates) }}"
-                                    data-counts="{{ json_encode($counts) }}"
-                                    height="300">
-                                    </canvas>
-                                </div>
+                    <div class="row justify-content-center">
+                        <div class="card">
+                            <div class="card-header">Jumlah Perolehan Nilai</div>
+                            <div class="card-body">
+                                <canvas id="predikatChart" 
+                                data-predicates="{{ json_encode($predicates) }}"
+                                data-counts="{{ json_encode($counts) }}"
+                                height="300">
+                                </canvas>
                             </div>
                         </div>
                     </div>

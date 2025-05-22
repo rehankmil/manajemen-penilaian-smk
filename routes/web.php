@@ -38,12 +38,12 @@ Route::group(['middleware'=>'auth:guru'], function()
     Route::match(array('PUT', 'PATCH'), '/profil-g/update', [App\Http\Controllers\Guru\ProfilController::class, 'update'])->name('guru.profil.update');
     Route::get('/penilaian', [App\Http\Controllers\Guru\PenilaianController::class, 'index'])->name('guru.penilaian');
     Route::get('/penilaian/kelas/{kelasId}/murid', [App\Http\Controllers\Guru\PenilaianController::class, 'daftarMurid'])->name('guru.penilaian.daftar-murid');
-    Route::get('/murid/{muridId}/form-nilai', [App\Http\Controllers\Guru\PenilaianController::class, 'formNilai'])->name('guru.penilaian.form-nilai');
-    Route::post('/nilai/store', [App\Http\Controllers\Guru\PenilaianController::class, 'store'])->name('guru.penilaian.store-nilai');
-    Route::get('/murid/{muridId}/nilai', [App\Http\Controllers\Guru\PenilaianController::class, 'daftarNilai'])->name('guru.penilaian.daftar-nilai');
-    Route::get('/nilai/{nilaiId}/edit', [App\Http\Controllers\Guru\PenilaianController::class, 'edit'])->name('guru.penilaian.edit-nilai');
-    Route::put('/nilai/{nilaiId}/update', [App\Http\Controllers\Guru\PenilaianController::class, 'update'])->name('guru.penilaian.update-nilai');
-    Route::delete('/nilai/{nilaiId}/destroy', [App\Http\Controllers\Guru\PenilaianController::class, 'destroy'])->name('guru.penilaian.destroy-nilai');
+    Route::get('/penilaian/{muridId}/form-nilai', [App\Http\Controllers\Guru\PenilaianController::class, 'formNilai'])->name('guru.penilaian.form-nilai');
+    Route::post('/penilaian/store', [App\Http\Controllers\Guru\PenilaianController::class, 'store'])->name('guru.penilaian.store-nilai');
+    Route::get('/penilaian/{muridId}/murid', [App\Http\Controllers\Guru\PenilaianController::class, 'daftarNilai'])->name('guru.penilaian.daftar-nilai');
+    Route::get('/penilaian/{nilaiId}/edit', [App\Http\Controllers\Guru\PenilaianController::class, 'edit'])->name('guru.penilaian.edit-nilai');
+    Route::put('/penilaian/{nilaiId}/update', [App\Http\Controllers\Guru\PenilaianController::class, 'update'])->name('guru.penilaian.update-nilai');
+    Route::delete('/penilaian/{nilaiId}/destroy', [App\Http\Controllers\Guru\PenilaianController::class, 'destroy'])->name('guru.penilaian.destroy-nilai');
 });
 
 /*

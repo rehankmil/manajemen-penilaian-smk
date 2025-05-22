@@ -11,7 +11,7 @@
                 <!-- Page Heading -->
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">{{ $title }}</h1>
-                    <a href="{{ route('murid.index') }}" class="btn btn-info btn-sm">Kembali</a>
+                    <a href="{{ route('nilai.index') }}" class="btn btn-info btn-sm">Kembali</a>
                 </div>
                 <div class="card">
                     <div class="card-body">
@@ -21,7 +21,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="mapel_id">Mata Pelajaran</label>
-                                        <select name="mapel_id" id="mapel_id" class="form-control @error('mapel_id') is-invalid @enderror" required>
+                                        <select name="mapel_id" id="mapel_id" class="form-control @error('mapel_id') is-invalid @enderror">
                                             <option value="">-- Pilih Mata Pelajaran --</option>
                                             @foreach($mapelList as $mapel)
                                             <option value="{{ $mapel->id }}" {{ old('mapel_id') == $mapel->id ? 'selected' : '' }}>
@@ -37,7 +37,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="kelas_id">Kelas</label>
-                                        <select name="kelas_id" id="kelas_id" class="form-control @error('kelas_id') is-invalid @enderror" required>
+                                        <select name="kelas_id" id="kelas_id" class="form-control @error('kelas_id') is-invalid @enderror">
                                             <option value="">-- Pilih Kelas --</option>
                                             @foreach($kelasList as $kelas)
                                                 <option value="{{ $kelas->id }}" {{ old('kelas_id') == $kelas->id ? 'selected' : '' }}>
@@ -55,7 +55,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="guru_id">Guru</label>
-                                        <select name="guru_id" id="guru_id" class="form-control @error('guru_id') is-invalid @enderror" required>
+                                        <select name="guru_id" id="guru_id" class="form-control @error('guru_id') is-invalid @enderror">
                                             <option value="">-- Pilih Mata Pelajaran Terlebih Dahulu --</option>
                                             @if(old('mapel_id') && old('guru_id'))
                                                 @foreach($guruList->where('mapel_id', old('mapel_id')) as $guru)
@@ -73,7 +73,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="murid_id">Murid</label>
-                                        <select name="murid_id" id="murid_id" class="form-control @error('murid_id') is-invalid @enderror" required>
+                                        <select name="murid_id" id="murid_id" class="form-control @error('murid_id') is-invalid @enderror">
                                             <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
                                             @if(old('kelas_id') && old('murid_id'))
                                                 @foreach($muridList->where('kelas_id', old('kelas_id')) as $murid)
@@ -93,7 +93,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="semester">Semester</label>
-                                        <select name="semester" id="semester" class="form-control @error('semester') is-invalid @enderror" required>
+                                        <select name="semester" id="semester" class="form-control @error('semester') is-invalid @enderror">
                                             <option value="">-- Pilih Semester --</option>
                                             @foreach($semesterList as $semester)
                                                 <option value="{{ $semester }}" {{ old('semester') == $semester ? 'selected' : '' }}>
@@ -110,7 +110,7 @@
                                     <div class="form-group">
                                         <label for="nilai">Nilai</label>
                                         <input type="number" name="nilai" id="nilai" class="form-control @error('nilai') is-invalid @enderror" 
-                                            value="{{ old('nilai') }}" min="0" max="100" required>
+                                            value="{{ old('nilai') }}">
                                         <small class="form-text text-muted">Nilai antara 0-100</small>
                                         @error('nilai')
                                             <div class="invalid-feedback">{{ $message }}</div>

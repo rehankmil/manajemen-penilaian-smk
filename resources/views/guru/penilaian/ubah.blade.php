@@ -26,29 +26,28 @@
                                 {{ session('error') }}
                             </div>
                         @endif
-                        <form action="{{ route('guru.penilaian.store-nilai') }}" method="POST">
+                        
+                        <form action="{{ route('guru.penilaian.update-nilai', $nilai->id) }}" method="POST">
                             @csrf
-                            <input type="hidden" name="murid_id" value="{{ $murid->id }}">
-                            
+                            @method('PUT')
                             <div class="mb-3">
                                 <label class="form-label">NIS</label>
                                 <input type="text" class="form-control" value="{{ $murid->nis }}" readonly>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label">Nama Murid</label>
                                 <input type="text" class="form-control" value="{{ $murid->nama }}" readonly>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Mata Pelajaran</label>
-                                    <input type="text" class="form-control" value="{{ $mapel->nama }}" readonly>
+                                <input type="text" class="form-control" value="{{ $mapel->nama }}" readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="semester" class="form-label">Semester</label>
                                 <select name="semester" id="semester" class="form-control @error('semester') is-invalid @enderror" required>
                                     <option value="">-- Pilih Semester --</option>
                                     @foreach($semesterList as $semester)
-                                        <option value="{{ $semester }}" {{ old('semester') == $semester ? 'selected' : '' }}>
+                                        <option value="{{ $semester }}" {{ old('semester', $nilai->semester) == $semester ? 'selected' : '' }}>
                                             Semester {{ $semester }}
                                         </option>
                                     @endforeach
@@ -62,7 +61,7 @@
                             <div class="mb-3">
                                 <label for="nilai" class="form-label">Nilai</label>
                                 <input type="number" name="nilai" id="nilai" class="form-control @error('nilai') is-invalid @enderror" 
-                                    value="{{ old('nilai') }}" min="0" max="100" required>
+                                    value="{{ old('nilai', $nilai->nilai) }}" min="0" max="100" required>
                                 @error('nilai')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -70,8 +69,8 @@
                                 @enderror
                             </div>
                             <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fa fa-save"></i> Tambah Nilai
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fa fa-save"></i> Update Nilai
                                 </button>
                             </div>
                         </form>

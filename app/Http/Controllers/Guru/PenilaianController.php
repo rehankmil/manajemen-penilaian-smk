@@ -65,8 +65,8 @@ class PenilaianController extends Controller
 
     public function formNilai($muridId)
     {
-        // Mendapatkan guru yang sedang login berdasarkan user_id
-        $guru = Guru::where('user_id', Auth::id())->first();
+        $user = Auth::guard('guru')->user();
+        $guru = $user->guru;
         
         if (!$guru) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses sebagai guru');
@@ -77,6 +77,8 @@ class PenilaianController extends Controller
         
         // Mendapatkan mapel yang diajar oleh guru
         $mapel = $guru->mapel;
+
+        $semesterList = ['1', '2'];
         
         // Cek apakah nilai sudah ada untuk murid dan mapel ini
         $nilai = Nilai::where('murid_id', $muridId)
@@ -84,7 +86,7 @@ class PenilaianController extends Controller
             ->where('guru_id', $guru->id)
             ->first();
         
-        return view('guru.penilaian.tambah', compact('murid', 'guru', 'mapel', 'nilai'), ['title' => 'Tambah Nilai Siswa']);
+        return view('guru.penilaian.tambah', compact('murid', 'guru', 'mapel', 'nilai', 'semesterList'), ['title' => 'Tambah Nilai Siswa']);
     }
 
     public function store(Request $request)
@@ -96,8 +98,8 @@ class PenilaianController extends Controller
             'murid_id' => 'required|exists:murid,id',
         ]);
         
-        // Mendapatkan guru yang sedang login berdasarkan user_id
-        $guru = Guru::where('user_id', Auth::id())->first();
+        $user = Auth::guard('guru')->user();
+        $guru = $user->guru;
         
         if (!$guru) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses sebagai guru');
@@ -136,19 +138,23 @@ class PenilaianController extends Controller
 
     public function edit($nilaiId)
     {
-        // Mendapatkan guru yang sedang login berdasarkan user_id
-        $guru = Guru::where('user_id', Auth::id())->first();
+        $user = Auth::guard('guru')->user();
+        $guru = $user->guru;
+
+        // dd($guru);
         
         if (!$guru) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses sebagai guru');
+            return redirect()->route('guru.dashboard')->with('error', 'Anda tidak memiliki akses sebagai guru');
         }
+
         
         // Mendapatkan nilai yang akan diedit
         $nilai = Nilai::findOrFail($nilaiId);
+
         
         // Memastikan guru hanya dapat mengedit nilai untuk mapel yang diajarnya
         if ($nilai->guru_id != $guru->id || $nilai->mapel_id != $guru->mapel_id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengedit nilai ini');
+            return redirect()->route('guru.penilaian.index')->with('error', 'Anda tidak memiliki akses untuk mengedit nilai ini');
         }
         
         // Mendapatkan data murid
@@ -156,8 +162,10 @@ class PenilaianController extends Controller
         
         // Mendapatkan mapel yang diajar oleh guru
         $mapel = $guru->mapel;
+
+        $semesterList = ['1', '2'];
         
-        return view('guru.penilaian.edit-nilai', compact('nilai', 'murid', 'guru', 'mapel'));
+        return view('guru.penilaian.ubah', compact('nilai', 'murid', 'guru', 'mapel', 'semesterList'), ['title' => 'Ubah Nilai Siswa']);
     }
     
     public function update(Request $request, $nilaiId)
@@ -168,8 +176,8 @@ class PenilaianController extends Controller
             'semester' => 'required|string',
         ]);
         
-        // Mendapatkan guru yang sedang login berdasarkan user_id
-        $guru = Guru::where('user_id', Auth::id())->first();
+        $user = Auth::guard('guru')->user();
+        $guru = $user->guru;
         
         if (!$guru) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses sebagai guru');
@@ -199,25 +207,20 @@ class PenilaianController extends Controller
     
     public function destroy($nilaiId)
     {
-        // Mendapatkan guru yang sedang login berdasarkan user_id
         $guru = Guru::where('user_id', Auth::id())->first();
         
         if (!$guru) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses sebagai guru');
         }
-        
-        // Mendapatkan nilai yang akan dihapus
+
         $nilai = Nilai::findOrFail($nilaiId);
         
-        // Memastikan guru hanya dapat menghapus nilai untuk mapel yang diajarnya
         if ($nilai->guru_id != $guru->id || $nilai->mapel_id != $guru->mapel_id) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus nilai ini');
         }
         
-        // Simpan murid_id sebelum menghapus nilai
         $muridId = $nilai->murid_id;
         
-        // Hapus nilai
         $nilai->delete();
         
         return redirect()->route('guru.penilaian.daftar-nilai', $muridId)
